@@ -1,0 +1,145 @@
+warning: in the working copy of 'config/redis.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/address.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/auth.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/cart.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/order.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/payment.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/product.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/return.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/user.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'controllers/wishlist.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'middlewares/auth.middleware.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'middlewares/rateLimiter.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'models/address.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'models/product.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'models/returnRequest.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'models/user.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'routes/address.routes.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'routes/auth.routes.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'routes/index.route.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'routes/product.routes.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'routes/return.routes.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'routes/user.routes.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'utils/error.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'utils/jwt.js', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/config/redis.js b/config/redis.js[m
+[1mindex 2147c67..af7d9f1 100644[m
+[1m--- a/config/redis.js[m
+[1m+++ b/config/redis.js[m
+[36m@@ -5,7 +5,7 @@[m [mlet redis;[m
+ [m
+ if (process.env.REDIS_URL) {[m
+   redis = createClient({[m
+[31m-    url: process.env.REDIS_URL,[m
+[32m+[m[32m    url: envVars.data.REDIS_URL || `redis://${envVars.data.REDIS_HOST}:${envVars.data.REDIS_PORT}`,[m
+     socket: {[m
+       reconnectStrategy: (retries) => {[m
+         if (retries > 5) {[m
+[1mdiff --git a/controllers/address.controller.js b/controllers/address.controller.js[m
+[1mindex 48538d8..532c6ab 100644[m
+[1m--- a/controllers/address.controller.js[m
+[1m+++ b/controllers/address.controller.js[m
+[36m@@ -77,13 +77,16 @@[m [mexport const getAddress = async (req, res, next) => {[m
+ };[m
+ [m
+ // @desc    Update address[m
+[31m-// @route   PUT /api/addresses/:id[m
+[32m+[m[32m// @route   PATCH /api/addresses[m
+ // @access  Private[m
+ export const updateAddress = async (req, res, next) => {[m
+     try {[m
+[31m-        const { id } = req.params;[m
+[32m+[m[32m        const { id, ...updateData } = req.body;[m
+         const userId = req.user.id;[m
+[31m-        const updateData = { ...req.body };[m
+[32m+[m
+[32m+[m[32m        if (!id) {[m
+[32m+[m[32m            return next(createError('Address ID is required to update', 400));[m
+[32m+[m[32m        }[m
+ [m
+         // If setting as default, update other addresses[m
+         if (updateData.isDefault) {[m
+[36m@@ -157,7 +160,8 @@[m [mexport const setDefaultAddress = async (req, res, next) => {[m
+     try {[m
+         const { id } = req.body;[m
+         const userId = req.user.id;[m
+[31m-[m
+[32m+[m[32m        //console.log(id,'idxxs')[m
+[32m+[m[32m        //console.log(userId,'jmj')[m
+         // Set all addresses to not default[m
+         await Address.updateMany([m
+             { user: userId, isDefault: true },[m
+[1mdiff --git a/controllers/auth.controller.js b/controllers/auth.controller.js[m
+[1mindex 6001d97..384048d 100644[m
+[1m--- a/controllers/auth.controller.js[m
+[1m+++ b/controllers/auth.controller.js[m
+[36m@@ -32,7 +32,7 @@[m [mexport const register = asyncHandler(async (req, res, next) => {[m
+   // Check if user already exists[m
+   const existingUser = await User.findOne({ email });[m
+   if (existingUser) {[m
+[31m-    return next(createError(400, 'User already exists with this email'));[m
+[32m+[m[32m    return next(createError('User already exists with this email', 400));[m
+   }[m
+ [m
+   // Create new user[m
+[36m@@ -88,7 +88,7 @@[m [mexport const register = asyncHandler(async (req, res, next) => {[m
+     httpOnly: true,[m
+     secure: process.env.NODE_ENV === 'production',[m
+     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',[m
+[31m-    maxAge: 15 * 60 * 1000,[m
+[32m+[m[32m    maxAge: parseInt(process.env.JWT_ACCESS_EXPIRES_IN, 10) * 1000,[m
+     path: '/',[m
+   });[m
+ [m
+[36m@@ -96,7 +96,7 @@[m [mexport const register = asyncHandler(async (req, res, next) => {[m
+     httpOnly: true,[m
+     secure: process.env.NODE_ENV === 'production',[m
+     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',[m
+[31m-    maxAge: 7 * 24 * 60 * 60 * 1000,[m
+[32m+[m[32m    maxAge: parseInt(process.env.JWT_REFRESH_EXPIRES_IN, 10) * 1000,[m
+     path: '/',[m
+   });[m
+ [m
+[36m@@ -104,7 +104,7 @@[m [mexport const register = asyncHandler(async (req, res, next) => {[m
+     httpOnly: true,[m
+     secure: process.env.NODE_ENV === 'production',[m
+     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',[m
+[31m-    maxAge: 7 * 24 * 60 * 60 * 1000,[m
+[32m+[m[32m    maxAge: parseInt(process.env.JWT_REFRESH_EXPIRES_IN, 10) * 1000,[m
+     path: '/',[m
+   });[m
+ [m
+[36m@@ -165,26 +165,27 @@[m [mconst sendVerificationEmail = async (user) => {[m
+ export const login = asyncHandler(async (req, res, next) => {[m
+   //console.log('lgn');[m
+   const { email, password } = req.body;[m
+[31m-[m
+[32m+[m[32m  //console.log(req.body, 'theod')[m
+   // Check if user exists[m
+   const user = await User.findOne({ email });[m
+   if (!user) {[m
+[31m-    return next(createError(401, 'Invalid email or password'));[m
+[32m+[m[32m    return next(createError('Invalid email or password', 401));[m
+   }[m
+ [m
+   // Check if account is active[m
+   if (!user.isActive) {[m
+[31m-    return next(createError(403, 'Account is deactivated. Please contact support.'));[m
+[32m+[m[32m    return next(createError('Account is deactivated. Please contact support.', 403));[m
+   }[m
+ [m
+   // Check password[m
+   const isMatch = await user.comparePassword(password);[m
+   if (!isMatch) {[m
+[31m-    return next(createError(401, 'Invalid email or password'));[m
+[32m+[m[32m    return next(createError('Invalid email or password', 401));[m
+   }[m
+ [m
+   //console.log(isMatch, 'isMatch');[m
+ [m
+[32m+[m
+   // Generate tokens[m
+   const tokens

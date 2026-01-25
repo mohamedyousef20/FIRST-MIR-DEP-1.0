@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+yarn-error.log
+dist
+coverage
+logs
+*.md
+.DS_Store
+.git
+.env
+Dockerfile*
