@@ -202,6 +202,7 @@ class MongoDBConnectionManager {
       this.connectionState.connectionAttempts = 0;
 
       logger.info('MongoDB connected successfully');
+      logger.info(mongoURI);
 
       return mongoose.connection;
     } catch (error) {
