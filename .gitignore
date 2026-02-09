@@ -5,3 +5,6 @@ coverage/
 logs/
 *.log
 dist/
+
+.vercel
+.env*.local
