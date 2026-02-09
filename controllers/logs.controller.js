@@ -3,8 +3,16 @@ import path from 'path';
 import logger from '../utils/logger.js';
 
 const logsDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
+
+function ensureLogsDir() {
+  try {
+    if (!fs.existsSync(logsDir)) {
+      fs.mkdirSync(logsDir);
+    }
+  } catch (err) {
+    // Silently ignore read-only filesystem errors (e.g., Vercel)
+    if (err.code !== 'EROFS') console.error('Failed to create logs directory:', err);
+  }
 }
 
 export const clientErrorlogger = async (req, res) => {
@@ -27,6 +35,7 @@ export const clientErrorlogger = async (req, res) => {
 
     // Persist to file in production (append JSON line)
     if (process.env.NODE_ENV === 'production') {
+      ensureLogsDir();
       const filePath = path.join(logsDir, `client-errors-${new Date().toISOString().slice(0, 10)}.log`);
       fs.appendFileSync(filePath, JSON.stringify(logEntry) + '\n');
     }
