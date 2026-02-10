@@ -84,10 +84,10 @@ const createRateLimiter = (windowMs, max, message, options = {}) => {
       return false;
     },
 
-    ...(process.env.NODE_ENV === 'production' && redis
+    ...(process.env.NODE_ENV === 'production' && redis?.client?.isReady
       ? {
         store: new RedisStore({
-          sendCommand: (...args) => redis.sendCommand(args),
+          sendCommand: (...args) => redis.sendCommand(...args),
           prefix: 'rate:',
         }),
       }
@@ -95,9 +95,58 @@ const createRateLimiter = (windowMs, max, message, options = {}) => {
   });
 };
 
+// Modified createRateLimiter function
+const createRateLimiterModified = (windowMs, max, message, options = {}) => {
+  const { skipOnDev = false, keyGenerator, skip } = options;
+
+  // Get whitelisted IPs
+  const getWhitelistedIPs = () => {
+    const whitelist = ['127.0.0.1', '::1'];
+    if (process.env.RATE_LIMIT_WHITELIST) {
+      whitelist.push(...process.env.RATE_LIMIT_WHITELIST.split(','));
+    }
+    return whitelist;
+  };
+
+  const whitelist = getWhitelistedIPs();
+
+  if (skipOnDev && process.env.NODE_ENV === 'development') {
+    return (req, res, next) => next();
+  }
+
+  let store = {};
+  if (process.env.NODE_ENV === 'production' && redis?.client?.isReady) {
+    try {
+      store = new RedisStore({
+        sendCommand: (...args) => redis.sendCommand(...args),
+        prefix: 'rate:',
+      });
+    } catch (e) {
+      console.warn('Failed to create RedisStore, falling back to memory:', e.message);
+    }
+  }
+
+  return rateLimit({
+    windowMs,
+    max,
+    message,
+    standardHeaders: true,
+    legacyHeaders: false,
+
+    keyGenerator: keyGenerator || ((req) => req.ip),
+
+    skip: (req) => {
+      if (whitelist.includes(req.ip)) return true;
+      if (typeof skip === 'function') return skip(req);
+      return false;
+    },
+
+    ...(Object.keys(store).length ? { store } : {}),
+  });
+};
 
 // Generic API rate limiter
-export const apiLimiter = createRateLimiter(
+export const apiLimiter = createRateLimiterModified(
   15 * 60 * 1000, // 15 minutes
   100, // Limit each IP to 100 requests per window
   'Too many requests from this IP, please try again after 15 minutes',
@@ -105,13 +154,13 @@ export const apiLimiter = createRateLimiter(
 );
 
 // Authentication rate limiters
-export const authLimiter = createRateLimiter(
+export const authLimiter = createRateLimiterModified(
   60 * 60 * 1000, // 1 hour
   5, // Limit each IP to 5 login attempts per hour
   'Too many login attempts, please try again after an hour'
 );
 
-export const strictAuthLimiter = createRateLimiter(
+export const strictAuthLimiter = createRateLimiterModified(
   15 * 60 * 1000, // 15 minutes
   3, // Limit each IP to 3 attempts per 15 minutes
   'Too many attempts, please try again after 15 minutes'
