@@ -684,7 +684,8 @@ export const redis = {
   sadd: (...args) => saddShim(...args),
   smembers: (...args) => smembersShim(...args),
   srem: (...args) => sremShim(...args),
-  expire: (...args) => expireShim(...args)
+  expire: (...args) => expireShim(...args),
+  sendCommand: (...args) => redisInstance.client?.sendCommand(...args),
 };
 
 export default redis;
